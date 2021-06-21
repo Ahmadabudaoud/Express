@@ -1,56 +1,47 @@
-// const products = require("../data");
-const { request, response } = require("express");
-let data = require("../data");
 const { Product } = require("../db/models");
 
-exports.productsList = async (request, response) => {
+exports.productsList = async (request, response, next) => {
   try {
     const products = await Product.findAll({
       attributes: { exclude: ["createdAt", "updatedAt"] },
     });
     response.json(products);
   } catch (error) {
-    response.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
-exports.productsDelete = async (request, response) => {
-  const { productId } = request.params;
+exports.productsDelete = async (request, response, next) => {
   try {
-    const foundProduct = await Product.findByPk(productId);
-    if (foundProduct) {
-      await foundProduct.destroy();
-      response.status(204).end();
-    } else {
-      response
-        .status(404)
-        .json({ message: "a product with this ID doesn't exist" });
-    }
+    await request.product.destroy();
+    response.status(204).end();
   } catch (error) {
-    response.status(500).json({ message: error.message });
+    next(error);
   }
 };
 
-exports.productsCreate = async (request, response) => {
+exports.productsCreate = async (request, response, next) => {
   try {
     const newProduct = await Product.create(request.body);
-
     response.status(201).json(newProduct);
   } catch (error) {
-    response.status(500).json({ message: error.message });
+    next(error);
   }
 };
 exports.updateProduct = async (request, response) => {
-  const { productId } = request.params;
   try {
-    const foundProduct = await Product.findByPk(productId);
-    if (foundProduct) {
-      await foundProduct.update(request.body);
-      response.status(204).end();
-    } else {
-      response.status(404).json({ message: error.message });
-    }
+    await request.product.update(request.body);
+    response.status(204).end();
   } catch (error) {
-    response.status(500).json({ message: error.message });
+    next(error);
+  }
+};
+
+exports.fetchProduct = async (productId, next) => {
+  try {
+    const product = await Product.findByPk(productId);
+    return product;
+  } catch (error) {
+    next(error);
   }
 };
